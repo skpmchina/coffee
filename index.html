@@ -43,35 +43,39 @@
     		var Device = Bmob.Object.extend("Device");
 		//创建查询对象，入口参数是对象类的实例
 		var query = new Bmob.Query(Device);
-		//查询单条数据，第一个参数是这条数据的objectId值
-		query.get(user.id, {
-  		    success: function(device) {
-    			// 查询成功，调用get方法获取对应属性的值
-    			var serialnumber = device.get("serialnumber");
-    			var temperature = device.get("tempcoffeeA");
-    			var shortCoffeeTime = device.get("timesmallcoffeeA");
-			var longCoffeeTime = device.get("timelargecoffeeA");
-			var americanCoffeeTime = device.get("timeamericanocoffeeA");
-			var rechargePods = device.get("rechargepods");
-			var leftPods = device.get("leftpods");
-			var totalPods = device.get("totalpods");
-			display("Serial Number: " + serialnumber + "</br>" +
-				"Temperature: " + temperature + "</br>" +
-				"Short Coffee Time: " + shortCoffeeTime + "</br>" +
-				"Long Coffee Time: " + longCoffeeTime + "</br>" +
-				"American Coffee Time: " + americanCoffeeTime + "</br>" +
-				"Recharge Pods: " + rechargePods + "</br>" +
-				"Left Pods: " + leftPods + "</br>" +
-				"TotalPods: " + totalPods + "</br>");
-  		    },
-  	    	    error: function(object, error) {
-    			// 查询失败
-			display("Device is not found, please contact with your vendor");
-  	    	    }
+		query.equalTo("owner", user.id);
+
+		query.find({
+    		    success: function(results) {
+			if (results.length == 0) {
+			    display("Device is not found, please contact with your vendor");
+			} else {
+			    var device = results[0];
+			    var serialnumber = device.get("serialnumber");
+    			    var temperature = device.get("tempcoffeeA");
+    			    var shortCoffeeTime = device.get("timesmallcoffeeA");
+			    var longCoffeeTime = device.get("timelargecoffeeA");
+			    var americanCoffeeTime = device.get("timeamericanocoffeeA");
+			    var rechargePods = device.get("rechargepods");
+			    var leftPods = device.get("leftpods");
+			    var totalPods = device.get("totalpods");
+			    display("Serial Number: " + serialnumber + "</br>" +
+				    "Temperature: " + temperature + "</br>" +
+				    "Short Coffee Time: " + shortCoffeeTime + "</br>" +
+				    "Long Coffee Time: " + longCoffeeTime + "</br>" +
+				    "American Coffee Time: " + americanCoffeeTime + "</br>" +
+				    "Recharge Pods: " + rechargePods + "</br>" +
+				    "Left Pods: " + leftPods + "</br>" +
+				    "TotalPods: " + totalPods + "</br>");
+			}
+    		    },
+    		    error: function(error) {
+			display("Error:" + error.code);
+    		    }
 		});
   	    },
   	    error: function(user, error) { // 登陆失败
-    		display("login failed");
+    		display("Username or password error");
   	    }
 	});
     }

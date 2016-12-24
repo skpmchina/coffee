@@ -43,8 +43,7 @@
     		var Device = Bmob.Object.extend("Device");
 		//创建查询对象，入口参数是对象类的实例
 		var query = new Bmob.Query(Device);
-		query.equalTo("owner", user.id);
-
+		query.equalTo("serialnumber", user.get("serialNumber"));
 		query.find({
     		    success: function(results) {
 			if (results.length == 0) {

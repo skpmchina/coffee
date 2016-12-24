@@ -1,0 +1,89 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>Coffee</title>
+  <meta name="description" content="Coffee">
+  <meta name="viewport" content="width=device-width">
+  <!-- <link rel="stylesheet" href="css/reset.css"> -->
+  <!-- <link rel="stylesheet" href="css/styles.css"> -->
+  <script type="text/javascript" src="jquery.min.js"></script>
+  <script type="text/javascript" src="bmob.js"></script>
+</head>
+
+<body>
+<div>
+    Username<input type="text" id="username">
+    Password<input type="password" id="password">
+    <button name="Query" id="query">Query</button>
+</div>
+<div id="info"></div>
+<script type="text/javascript">
+    function display(text){
+	var txtInfo=$("#info");
+	var content='<p><span style="color:red;">'+text+'</p><br/></br>';
+	txtInfo.html(content);
+    }
+    function fetchInfo(){
+	var username = $("#username").val();
+	var password = $("#password").val();
+	
+	if($.trim(username)==""){
+	    display("Username should not be empty!");
+	    return;
+	}
+
+	if($.trim(password)==""){
+	    display("Password should not be empty!");
+	    return;
+	}
+
+	Bmob.User.logIn(username, password, {
+  	    success: function(user) { // 登陆成功
+    		var Device = Bmob.Object.extend("Device");
+		//创建查询对象，入口参数是对象类的实例
+		var query = new Bmob.Query(Device);
+		//查询单条数据，第一个参数是这条数据的objectId值
+		query.get(user.id, {
+  		    success: function(device) {
+    			// 查询成功，调用get方法获取对应属性的值
+    			var serialnumber = device.get("serialnumber");
+    			var temperature = device.get("tempcoffeeA");
+    			var shortCoffeeTime = device.get("timesmallcoffeeA");
+			var longCoffeeTime = device.get("timelargecoffeeA");
+			var americanCoffeeTime = device.get("timeamericanocoffeeA");
+			var rechargePods = device.get("rechargepods");
+			var leftPods = device.get("leftpods");
+			var totalPods = device.get("totalpods");
+			display("Serial Number: " + serialnumber + "</br>" +
+				"Temperature: " + temperature + "</br>" +
+				"Short Coffee Time: " + shortCoffeeTime + "</br>" +
+				"Long Coffee Time: " + longCoffeeTime + "</br>" +
+				"American Coffee Time: " + americanCoffeeTime + "</br>" +
+				"Recharge Pods: " + rechargePods + "</br>" +
+				"Left Pods: " + leftPods + "</br>" +
+				"TotalPods: " + totalPods + "</br>");
+  		    },
+  	    	    error: function(object, error) {
+    			// 查询失败
+			display("Device is not found, please contact with your vendor");
+  	    	    }
+		});
+  	    },
+  	    error: function(user, error) { // 登陆失败
+    		display("login failed");
+  	    }
+	});
+    }
+	
+    $("#query").click(function(){
+	fetchInfo();
+    });
+
+    Bmob.initialize("19fd098d0b2ba10208c9b15997804884", "ce1cd7755bd2bd6ec57a87e34febaa47");
+    
+</script>
+
+</body>
+
+</html>

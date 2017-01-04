@@ -15,76 +15,168 @@
 <div>
     Username<input type="text" id="username">
     Password<input type="password" id="password">
-    <button name="Query" id="query">Query</button>
+    <button id="login">Query</button>
 </div>
 <div id="info"></div>
+<div id="lyt_load_more" style="display:none">
+    <button id="load_more">Load more</button>
+</div>
 <script type="text/javascript">
-    function display(text){
-	var txtInfo=$("#info");
-	var content='<p><span style="color:red;">'+text+'</p><br/></br>';
+    // 每一页显示的数量
+    var PAGE_SIZE = 10;
+    // 当前页数索引
+    var pageIndex = 0;
+    // 用户的咖啡机列表
+    var deviceList;
+    // 是否正在拉取数据
+    var inProgress;
+
+    // 错误信息显示
+    function displayError(text) {
+	var txtInfo = $("#info");
+	var content = '<p><span style="color:red;">' + text + '</p><br/></br>';
 	txtInfo.html(content);
     }
-    function fetchInfo(){
+
+    // 数据列表显示
+    function displayInfo() {
+	var txtInfo = $("#info");
+	var tableStr = "<table border='1' cellspacing='0' cellpadding='5' width='400'>";
+	tableStr = tableStr + "<tr align='left'>";
+        tableStr = tableStr + "<th>Serial Number</th>";
+        tableStr = tableStr + "<th>Temperature</th>";
+        tableStr = tableStr + "<th>Short Coffee Time</th>";
+        tableStr = tableStr + "<th>Long Cooffee Time</th>";
+        tableStr = tableStr + "<th>American Coffee Time</th>";
+        tableStr = tableStr + "<th>Recharge Pods</th>";
+        tableStr = tableStr + "<th>Left Pods</th>";
+        tableStr = tableStr + "<th>Total Pods</th>";
+        tableStr = tableStr + "</tr>";
+        // 循环处理查询到的数据
+        for (var i = 0; i < deviceList.length; i++) {
+            var device = deviceList[i];
+            var serialnumber = device.get("serialnumber");
+            var temperature = device.get("tempcoffeeA");
+            var shortCoffeeTime = device.get("timesmallcoffeeA");
+            var longCoffeeTime = device.get("timelargecoffeeA");
+            var americanCoffeeTime = device.get("timeamericanocoffeeA");
+            var rechargePods = device.get("rechargepods");
+            var leftPods = device.get("leftpods");
+            var totalPods = device.get("totalpods");
+            tableStr = tableStr + "<tr>";
+	    tableStr = tableStr + "<td>" + serialnumber + "</td>";
+	    tableStr = tableStr + "<td>" + temperature + "</td>";
+	    tableStr = tableStr + "<td>" + shortCoffeeTime + "</td>";
+	    tableStr = tableStr + "<td>" + longCoffeeTime + "</td>";
+	    tableStr = tableStr + "<td>" + americanCoffeeTime + "</td>";
+	    tableStr = tableStr + "<td>" + rechargePods + "</td>";
+	    tableStr = tableStr + "<td>" + leftPods + "</td>";
+	    tableStr = tableStr + "<td>" + totalPods + "</td>";
+	    tableStr = tableStr + "</tr>";
+	}
+	tableStr = tableStr + "</table>";
+	txtInfo.html(tableStr);
+    }
+
+    // 显示加载更多按钮
+    function showLoadMore() {
+	$("#lyt_load_more").attr("style","display:block;");
+    }
+
+    // 隐藏加载更多按钮
+    function hideLoadMore() {
+	$("#lyt_load_more").attr("style","display:none;");
+    }
+
+    // 登陆
+    function login() {
+	// 重置数据
+	pageIndex = 0;
+	currentUser = null;
+	deviceList = null;
+	inProgress = false;
+	// 用户输入的信息
 	var username = $("#username").val();
 	var password = $("#password").val();
-	
-	if($.trim(username)==""){
-	    display("Username should not be empty!");
+	// 检测正确性
+	if($.trim(username) == "") {
+	    displayError("Username should not be empty!");
+	    return;
+	} else if($.trim(password) == "") {
+	    displayError("Password should not be empty!");
 	    return;
 	}
-
-	if($.trim(password)==""){
-	    display("Password should not be empty!");
-	    return;
-	}
-
+	// 登陆
 	Bmob.User.logIn(username, password, {
   	    success: function(user) { // 登陆成功
-    		var Device = Bmob.Object.extend("Device");
-		//创建查询对象，入口参数是对象类的实例
-		var query = new Bmob.Query(Device);
-		query.equalTo("serialnumber", user.get("serialNumber"));
-		query.find({
-    		    success: function(results) {
-			if (results.length == 0) {
-			    display("Device is not found, please contact with your vendor");
-			} else {
-			    var device = results[0];
-			    var serialnumber = device.get("serialnumber");
-    			    var temperature = device.get("tempcoffeeA");
-    			    var shortCoffeeTime = device.get("timesmallcoffeeA");
-			    var longCoffeeTime = device.get("timelargecoffeeA");
-			    var americanCoffeeTime = device.get("timeamericanocoffeeA");
-			    var rechargePods = device.get("rechargepods");
-			    var leftPods = device.get("leftpods");
-			    var totalPods = device.get("totalpods");
-			    display("Serial Number: " + serialnumber + "</br>" +
-				    "Temperature: " + temperature + "</br>" +
-				    "Short Coffee Time: " + shortCoffeeTime + "</br>" +
-				    "Long Coffee Time: " + longCoffeeTime + "</br>" +
-				    "American Coffee Time: " + americanCoffeeTime + "</br>" +
-				    "Recharge Pods: " + rechargePods + "</br>" +
-				    "Left Pods: " + leftPods + "</br>" +
-				    "TotalPods: " + totalPods + "</br>");
-			}
-    		    },
-    		    error: function(error) {
-			display("Error:" + error.code);
-    		    }
-		});
+		fetchData();
   	    },
   	    error: function(user, error) { // 登陆失败
-    		display("Username or password error");
+    		displayError("Username or password error");
   	    }
 	});
     }
-	
-    $("#query").click(function(){
-	fetchInfo();
+
+    function fetchData() {
+	// 如果正在拉取数据，那么什么也不做
+	if (inProgress) {
+	    return;
+	}
+	// 设置正在拉取数据标志位
+	inProgress = true;
+	// 申明类型
+	var Device = Bmob.Object.extend("Device");
+	var query = new Bmob.Query(Device);
+	query.equalTo("owner", Bmob.User.current().id);
+	query.skip(pageIndex * PAGE_SIZE);
+	query.limit(PAGE_SIZE);
+	query.find({
+	    success: function(results) {
+		if (deviceList == null) {
+		    deviceList = results;
+		} else {
+		    deviceList = deviceList.concat(results);
+		}
+		if (results.length < PAGE_SIZE) {
+		    hideLoadMore();
+		} else {
+		    showLoadMore();
+		}
+		inProgress = false;
+		if (deviceList.length == 0) {
+		    displayError("There's no device in your account");
+		} else {
+		    displayInfo();
+		}
+	    },
+	    error: function(error) {
+		inProgress = false;
+		displayError("Error:" + error.code);
+    	    }
+	});
+    }
+
+    function loadMore() {
+	// 如果正在拉取数据，那么什么也不做
+	if (inProgress) {
+	    return;
+	}
+	pageIndex++;
+	fetchData();
+    }
+
+    // 设置登陆按钮监听
+    $("#login").click(function() {
+	login();
     });
 
+    // 设置加载更多按钮监听
+    $("#load_more").click(function() {
+	loadMore();
+    });
+
+    // 初始化基础配置
     Bmob.initialize("19fd098d0b2ba10208c9b15997804884", "ce1cd7755bd2bd6ec57a87e34febaa47");
-    
 </script>
 
 </body>

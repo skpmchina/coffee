@@ -42,15 +42,15 @@
     function displayInfo() {
 	var txtInfo = $("#info");
 	var tableStr = "<table border='1' cellspacing='0' cellpadding='5' width='400'>";
-	tableStr = tableStr + "<tr align='left'>";
-        tableStr = tableStr + "<th>Serial Number</th>";
-        tableStr = tableStr + "<th>Temperature</th>";
-        tableStr = tableStr + "<th>Short Coffee Time</th>";
-        tableStr = tableStr + "<th>Long Cooffee Time</th>";
-        tableStr = tableStr + "<th>American Coffee Time</th>";
-        tableStr = tableStr + "<th>Recharge Pods</th>";
-        tableStr = tableStr + "<th>Left Pods</th>";
-        tableStr = tableStr + "<th>Total Pods</th>";
+	tableStr = tableStr + "<tr align='center'>";
+        tableStr = tableStr + "<th>Numero seriale</br>(Serial Number)</th>";
+        tableStr = tableStr + "<th>Temperatura</br>(Temperature)</th>";
+        tableStr = tableStr + "<th>Tempo caffè corto</br>(Short Coffee Time)</th>";
+        tableStr = tableStr + "<th>Tempo caffè lungo</br>(Long Coffee Time)</th>";
+        tableStr = tableStr + "<th>Tempo caffè americano</br>(American Coffee Time)</th>";
+        tableStr = tableStr + "<th>Ricarica in corso</br>(Recharging)</th>";
+        tableStr = tableStr + "<th>Caffè disponibili</br>(Left Coffees)</th>";
+        tableStr = tableStr + "<th>Caffè erogati</br>(Coffees done)</th>";
         tableStr = tableStr + "</tr>";
         // 循环处理查询到的数据
         for (var i = 0; i < deviceList.length; i++) {
